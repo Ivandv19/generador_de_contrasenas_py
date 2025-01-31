@@ -2,6 +2,9 @@ import random
 import string
 import pyperclip  # Para copiar al portapapeles
 import re
+import tkinter as tk
+from tkinter import messagebox
+
 
 class Contraseña:
     def __init__(self, contraseña, longitud, seguridad):
@@ -62,73 +65,128 @@ class GeneradorDeContraseñas:
         return "Contraseña segura"
 
 
-def menu_principal():
-    while True:
-        print("\n****************** Menú Principal ******************")
-        print("1. Generar una nueva contraseña")
-        print("2. Verificar la seguridad de una contraseña")
-        print("3. Salir")
-        print("*****************************************************")
-        
-        opción = input("Seleccione una opción (1, 2, o 3): ")
+def generar_contraseña_gui():
+    try:
+        mayúsculas = var_mayúsculas.get()
+        minúsculas = var_minúsculas.get()
+        números = var_números.get()
+        símbolos = var_símbolos.get()
+        longitud_min = int(entry_longitud_min.get())
+        longitud_max = int(entry_longitud_max.get())
 
-        if opción == "1":
-            generar_contraseña()
-        elif opción == "2":
-            verificar_contraseña()
-        elif opción == "3":
-            print("¡Hasta luego! Gracias por usar el generador de contraseñas.")
-            break
-        else:
-            print("Opción no válida. Por favor, elija una opción entre 1, 2 o 3.")
+        # Validación de longitud mínima y máxima
+        if longitud_min < 8 or longitud_min > 32:
+            raise ValueError("La longitud mínima debe ser entre 8 y 32")
+        if longitud_max < 8 or longitud_max > 32:
+            raise ValueError("La longitud máxima debe ser entre 8 y 32")
+        if longitud_min > longitud_max:
+            raise ValueError("La longitud mínima no puede ser mayor que la máxima")
+
+        generador = GeneradorDeContraseñas(
+            mayúsculas=mayúsculas,
+            minúsculas=minúsculas,
+            números=números,
+            símbolos=símbolos,
+            longitud_min=longitud_min,
+            longitud_max=longitud_max
+        )
+
+        contraseña = generador.generar_contraseña()
+        label_resultado.config(text=f"Contraseña: {contraseña.contraseña}\nLongitud: {contraseña.longitud}\nSeguridad: {contraseña.seguridad}")
+
+        # Habilitar botón de copiar
+        btn_copiar.config(state="normal", command=lambda: copiar_contraseña(contraseña.contraseña))
+
+    except ValueError as e:
+        messagebox.showerror("Error", str(e))
 
 
-def generar_contraseña():
-    print("\nGenerador de Contraseñas:")
-    mayúsculas = input("¿Quieres incluir mayúsculas? (s/n): ").lower() == "s"
-    minúsculas = input("¿Quieres incluir minúsculas? (s/n): ").lower() == "s"
-    números = input("¿Quieres incluir números? (s/n): ").lower() == "s"
-    símbolos = input("¿Quieres incluir símbolos? (s/n): ").lower() == "s"
-    longitud_min = int(input("¿Cuál es la longitud mínima de la contraseña? (por ejemplo, 8): "))
-    longitud_max = int(input("¿Cuál es la longitud máxima de la contraseña? (por ejemplo, 16): "))
+def copiar_contraseña(contraseña):
+    pyperclip.copy(contraseña)  # Copia la contraseña al portapapeles
+    messagebox.showinfo("Copiado", "La contraseña ha sido copiada al portapapeles")
 
+
+def verificar_contraseña_gui():
+    contraseña = entry_verificar.get()
     generador = GeneradorDeContraseñas(
-        mayúsculas=mayúsculas,
-        minúsculas=minúsculas,
-        números=números,
-        símbolos=símbolos,
-        longitud_min=longitud_min,
-        longitud_max=longitud_max
-    )
-
-    contraseña = generador.generar_contraseña()
-
-    print(f"\nContraseña generada: {contraseña.contraseña}")
-    print(f"Longitud: {contraseña.longitud}")
-    print(f"Seguridad: {contraseña.seguridad}")
-
-    copiar = input("\n¿Quieres copiar la contraseña al portapapeles? (s/n): ").lower()
-    if copiar == "s":
-        pyperclip.copy(contraseña.contraseña)
-        print("La contraseña ha sido copiada al portapapeles.")
-
-
-def verificar_contraseña():
-    print("\nVerificador de Contraseñas:")
-    contraseña = input("Introduce la contraseña para verificar su seguridad: ")
-    
-    generador = GeneradorDeContraseñas(
-        mayúsculas=False,  
+        mayúsculas=False,
         minúsculas=False,
         números=False,
         símbolos=False,
         longitud_min=0,
         longitud_max=0
     )
-
     seguridad = generador.verificar_seguridad(contraseña)
-    print(f"Resultado de la verificación: {seguridad}")
+    messagebox.showinfo("Resultado de la verificación", seguridad)
 
 
-if __name__ == "__main__":
-    menu_principal()
+# Configuración de la interfaz gráfica
+ventana = tk.Tk()
+ventana.title("Generador y Verificador de Contraseñas")
+
+# Agregar título dentro de la interfaz
+label_titulo = tk.Label(ventana, text="Generador y Verificador de Contraseñas", font=("Arial", 16, "bold"))
+label_titulo.pack(pady=10)
+
+# Generación de contraseña
+frame_generar = tk.Frame(ventana)
+frame_generar.pack(padx=10, pady=10)
+
+label_mayúsculas = tk.Label(frame_generar, text="¿Incluir mayúsculas?")
+label_mayúsculas.grid(row=0, column=0, sticky="w")
+var_mayúsculas = tk.BooleanVar()
+check_mayúsculas = tk.Checkbutton(frame_generar, variable=var_mayúsculas)
+check_mayúsculas.grid(row=0, column=1)
+
+label_minúsculas = tk.Label(frame_generar, text="¿Incluir minúsculas?")
+label_minúsculas.grid(row=1, column=0, sticky="w")
+var_minúsculas = tk.BooleanVar()
+check_minúsculas = tk.Checkbutton(frame_generar, variable=var_minúsculas)
+check_minúsculas.grid(row=1, column=1)
+
+label_números = tk.Label(frame_generar, text="¿Incluir números?")
+label_números.grid(row=2, column=0, sticky="w")
+var_números = tk.BooleanVar()
+check_números = tk.Checkbutton(frame_generar, variable=var_números)
+check_números.grid(row=2, column=1)
+
+label_símbolos = tk.Label(frame_generar, text="¿Incluir símbolos?")
+label_símbolos.grid(row=3, column=0, sticky="w")
+var_símbolos = tk.BooleanVar()
+check_símbolos = tk.Checkbutton(frame_generar, variable=var_símbolos)
+check_símbolos.grid(row=3, column=1)
+
+label_longitud_min = tk.Label(frame_generar, text="Longitud mínima:")
+label_longitud_min.grid(row=4, column=0, sticky="w")
+entry_longitud_min = tk.Entry(frame_generar)
+entry_longitud_min.grid(row=4, column=1)
+
+label_longitud_max = tk.Label(frame_generar, text="Longitud máxima:")
+label_longitud_max.grid(row=5, column=0, sticky="w")
+entry_longitud_max = tk.Entry(frame_generar)
+entry_longitud_max.grid(row=5, column=1)
+
+btn_generar = tk.Button(frame_generar, text="Generar Contraseña", command=generar_contraseña_gui)
+btn_generar.grid(row=6, column=0, columnspan=2, pady=10)
+
+label_resultado = tk.Label(frame_generar, text="Contraseña: ")
+label_resultado.grid(row=7, column=0, columnspan=2)
+
+btn_copiar = tk.Button(frame_generar, text="Copiar al portapapeles", state="disabled")
+btn_copiar.grid(row=8, column=0, columnspan=2, pady=10)
+
+# Verificación de contraseña
+frame_verificar = tk.Frame(ventana)
+frame_verificar.pack(padx=10, pady=10)
+
+label_verificar = tk.Label(frame_verificar, text="Introduce la contraseña a verificar:")
+label_verificar.grid(row=0, column=0, sticky="w")
+entry_verificar = tk.Entry(frame_verificar, show="*")
+entry_verificar.grid(row=0, column=1)
+
+btn_verificar = tk.Button(frame_verificar, text="Verificar Contraseña", command=verificar_contraseña_gui)
+btn_verificar.grid(row=1, column=0, columnspan=2, pady=10)
+
+ventana.mainloop()
+
+
